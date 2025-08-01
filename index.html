@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lucky Jet Predictor</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #001f3f;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }h1 {
+  color: #00cfff;
+  text-shadow: 0 0 10px #00cfff;
+  margin-bottom: 30px;
+  font-size: 24px;
+}
+
+.circle-container {
+  position: relative;
+  width: 230px;
+  height: 230px;
+  margin-bottom: 30px;
+}
+
+.rotating-circle {
+  width: 100%;
+  height: 100%;
+  border: 8px solid transparent;
+  border-top: 8px solid #00cfff;
+  border-right: 8px solid #00cfff;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(345deg); }
+}
+
+.coefficient {
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 24px;
+  font-weight: bold;
+  transition: color 1s ease-in-out;
+}
+
+#predictBtn {
+  padding: 14px 28px;
+  font-size: 16px;
+  background-color: #00cfff;
+  color: #001f3f;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#timeInfo {
+  margin-top: 20px;
+  font-size: 15px;
+  color: #ccc;
+}
+
+  </style>
+</head>
+<body>  <h1>𝑫𝑨𝑹𝑲 𝑴𝑨𝑮𝑰𝑪 𝑳𝑼𝑪𝑲𝒀 𝑱𝑬𝑻 𝑩𝑶𝑻</h1>  <div class="circle-container">
+    <div class="rotating-circle"></div>
+    <div id="coefficient" class="coefficient">5.00x - 15.00x</div>
+  </div><button id="predictBtn">PREDICT</button>
+
+  <div id="timeInfo"></div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDvFDByPPo9zgwKLdPaREz1OVMQCXmPfrs",
+      authDomain: "bets-d795d.firebaseapp.com",
+      databaseURL: "https://bets-d795d-default-rtdb.firebaseio.com",
+      projectId: "bets-d795d",
+      storageBucket: "bets-d795d.appspot.com",
+      messagingSenderId: "384386108287",
+      appId: "1:384386108287:web:d238a5ec8068d9bb9be84a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbRef = ref(db);
+
+    const predictBtn = document.getElementById('predictBtn');
+    const coefficient = document.getElementById('coefficient');
+    const timeInfo = document.getElementById('timeInfo');
+
+    const colors = [
+      "#ff0000", "#ff9900", "#ffff00", "#33ff00", "#00ffff",
+      "#0066ff", "#cc00ff", "#ff33cc", "#ff0066", "#00ffcc",
+      "#6600ff", "#3399ff", "#66ff66", "#ffcc00", "#ff6699"
+    ];
+
+    function getRandomInRange(min, max) {
+      return (Math.random() * (max - min) + min).toFixed(2);
+    }
+
+    function findNextFutureTime(start, gapMinutes) {
+      const now = new Date();
+      const temp = new Date(start.getTime());
+      while (temp <= now) {
+        const nextGap = Math.floor(Math.random() * 2) + 6; // 6–7 mins
+        temp.setMinutes(temp.getMinutes() + nextGap);
+      }
+      const end = new Date(temp);
+      end.setMinutes(end.getMinutes() + 1);
+      return { start: temp, end: end };
+    }
+
+    function formatTime(date) {
+      return date.getHours().toString().padStart(2, '0') + ':' +
+             date.getMinutes().toString().padStart(2, '0');
+    }
+
+    function updatePrediction(startTime) {
+      const min = getRandomInRange(5.00, 5.30);
+      const max = getRandomInRange(10.00, 15.99);
+      coefficient.textContent = `${min}x - ${max}x`;
+
+      if (typeof startTime === "string" && startTime.includes(":")) {
+        const [startHour, startMinute] = startTime.split(":").map(num => parseInt(num, 10));
+        const start = new Date();
+        start.setHours(startHour);
+        start.setMinutes(startMinute);
+        start.setSeconds(0);
+        start.setMilliseconds(0);
+
+        const future = findNextFutureTime(start);
+        timeInfo.innerHTML = `Prediction Time: <strong>${formatTime(future.start)} - ${formatTime(future.end)}</strong>`;
+      } else {
+        console.error("Start time from Firebase is invalid:", startTime);
+      }
+    }
+
+    function loadStartTime() {
+      get(child(dbRef, 'predictor/startTime')).then((snapshot) => {
+        if (snapshot.exists()) {
+          const startTime = snapshot.val();
+          updatePrediction(startTime);
+        } else {
+          const defaultTime = "12:01";
+          set(ref(db, 'predictor'), { startTime: defaultTime });
+          updatePrediction(defaultTime);
+        }
+      }).catch((error) => {
+        console.error("Error fetching time:", error);
+      });
+    }
+
+    predictBtn.addEventListener('click', loadStartTime);
+
+    // Initial prediction
+    loadStartTime();
+
+    // Smoothly change colors every second
+    let colorIndex = 0;
+    setInterval(() => {
+      coefficient.style.color = colors[colorIndex];
+      colorIndex = (colorIndex + 1) % colors.length;
+    }, 1000);
+  </script></body>
+</html>
