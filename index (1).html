@@ -1,0 +1,127 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lucky Jet Predictor</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #001f3f;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }h1 {
+  color: #00cfff;
+  text-shadow: 0 0 10px #00cfff;
+  margin-bottom: 30px;
+  font-size: 24px;
+}
+
+.circle-container {
+  position: relative;
+  width: 230px;
+  height: 230px;
+  margin-bottom: 30px;
+}
+
+.rotating-circle {
+  width: 100%;
+  height: 100%;
+  border: 8px solid transparent;
+  border-top: 8px solid #00cfff;
+  border-right: 8px solid #00cfff;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(345deg); }
+}
+
+.coefficient {
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 26px;
+  font-weight: bold;
+  transition: color 1s ease-in-out;
+}
+
+#predictBtn {
+  padding: 14px 28px;
+  font-size: 16px;
+  background-color: #00cfff;
+  color: #001f3f;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#timeInfo {
+  margin-top: 20px;
+  font-size: 15px;
+  color: #ccc;
+}
+
+  </style>
+</head>
+<body>  <h1>DARK MAGIC LUCKY JET BOT</h1>  <div class="circle-container">
+    <div class="rotating-circle"></div>
+    <div id="coefficient" class="coefficient">5.00x - 15.00x</div>
+  </div><button id="predictBtn">PREDICT</button>
+
+  <div id="timeInfo"></div>  <script>
+    const predictBtn = document.getElementById('predictBtn');
+    const coefficient = document.getElementById('coefficient');
+    const timeInfo = document.getElementById('timeInfo');
+
+    const colors = [
+      "#ff0000", "#ff9900", "#ffff00", "#33ff00", "#00ffff",
+      "#0066ff", "#cc00ff", "#ff33cc", "#ff0066", "#00ffcc",
+      "#6600ff", "#3399ff", "#66ff66", "#ffcc00", "#ff6699"
+    ];
+
+    function getRandomFloat(min, max) {
+      return (Math.random() * (max - min) + min).toFixed(2);
+    }
+
+    function updatePrediction() {
+      const min = getRandomFloat(5.00, 5.30);
+      const max = getRandomFloat(10.00, 15.99);
+      coefficient.textContent = `${min}x - ${max}x`;
+
+      const now = new Date();
+      const gap = Math.floor(Math.random() * 2) + 6; // 6 or 7 minutes gap
+
+      const fromTime = new Date(now.getTime() + gap * 60000);
+      const toTime = new Date(fromTime.getTime() + 1 * 60000); // 1-minute prediction range
+
+      const formatTime = (date) => `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+      timeInfo.innerHTML = `Predicted Time: <strong>${formatTime(fromTime)} - ${formatTime(toTime)}</strong>`;
+    }
+
+    // Initial prediction
+    updatePrediction();
+
+    // Update on click
+    predictBtn.addEventListener('click', updatePrediction);
+
+    // Smoothly change colors every second
+    let colorIndex = 0;
+    setInterval(() => {
+      coefficient.style.color = colors[colorIndex];
+      colorIndex = (colorIndex + 1) % colors.length;
+    }, 1000);
+  </script></body>
+</html>
